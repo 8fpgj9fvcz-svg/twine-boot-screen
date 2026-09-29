@@ -9,193 +9,234 @@
 </head>
 <body>
 <tw-story><noscript><tw-noscript>JavaScript needs to be enabled to play Заставка для роликов.</tw-noscript></noscript></tw-story>
-<tw-storydata name="Заставка для роликов" startnode="1" creator="Twine" creator-version="2.12.0" format="Harlowe" format-version="3.3.9" ifid="BFF06711-3292-4A53-9A7C-53D4F9028E1F" options="" tags="" zoom="1" hidden><style role="stylesheet" id="twine-user-stylesheet" type="text/twine-css"></style><script role="script" id="twine-user-script" type="text/twine-javascript"></script><tw-passagedata pid="1" name="Main" tags="" position="625,125" size="100,100">&lt;style&gt;
-    /* Основной контейнер */
-    .boot-screen {
-        position: relative;
-        width: 100%;
-        height: 100vh;
-        background-color: #000; /* Черный цвет по умолчанию */
-        background-image: url(&#39;background.jpg&#39;); /* ТВОЙ ФОН: имя файла должно совпадать буква в букву */
-        background-size: cover;
-        background-position: center;
-        color: #0f0;
-        font-family: &#39;Courier New&#39;, Courier, monospace;
-        font-size: 20px;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        text-align: center;
-        overflow: hidden;
-    }
+<tw-storydata name="Заставка для роликов" startnode="1" creator="Twine" creator-version="2.12.0" format="Harlowe" format-version="3.3.9" ifid="BFF06711-3292-4A53-9A7C-53D4F9028E1F" options="" tags="" zoom="1" hidden><style role="stylesheet" id="twine-user-stylesheet" type="text/twine-css">body {
+  /* Замените 'path/to/your-image.jpg' на путь к вашему файлу */
+  background-image: url('background.jpg');
+  background-size: cover;       /* Растянуть на весь экран, сохраняя пропорции */
+  background-position: center;  /* Центрировать изображение */
+  background-attachment: fixed; /* Чтобы фон не «ездил» при прокрутке */
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
 
-    /* Логи */
-    .boot-log {
-        white-space: pre-wrap;
-        letter-spacing: 2px;
-        margin-bottom: 30px;
-        max-width: 600px;
-        line-height: 1.4;
-    }
+/* Затемняем фон, чтобы текст и ЭЛТ-рамка читались лучше */
+body::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6); /* Полупрозрачный черный слой */
+  z-index: -1;
+  pointer-events: none;
+}
 
-    /* Контейнер шкалы */
-    .progress-container {
-        width: 400px;
-        height: 12px;
-        background: #111;
-        border: 1px solid #333;
-        margin-bottom: 20px;
-        overflow: hidden;
-        box-sizing: border-box;
-    }
+/* ... (все стили контейнера, рамки, scanlines, glow остаются без изменений) ... */
 
-    /* Сама полоса загрузки (ЗЕЛЕНАЯ) */
-    .progress-bar {
-        height: 100%;
-        width: 0%;
-        background: #0f0;
-        transition: width 0.1s linear; /* Плавность */
-    }
+.status-text {
+  margin: 0 0 20px 0;
+  font-size: 1.2rem;
+  letter-spacing: 2px;
+  color: #0f0;
+  text-shadow: 0 0 6px rgba(15, 255, 0, 0.6);
+}
 
-    /* Текст статуса */
-    .progress-text {
-        color: #aaa;
-        font-size: 14px;
-        margin-top: 8px;
-        font-weight: bold;
-        text-transform: uppercase;
-    }
+.progress-wrapper {
+  width: 400px;
+  height: 24px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 2px solid #555;
+  margin: 0 auto 15px;
+  position: relative;
+  overflow: hidden;
+  box-sizing: border-box;
+}
 
-    /* Кнопка */
-    .btn-wrapper {
-        opacity: 0;
-        transform: scale(0.8);
-        transition: all 0.5s ease;
-        margin-top: 40px;
-    }
-    .btn-wrapper.ready {
-        opacity: 1;
-        transform: scale(1);
-    }
-    .btn-wrapper a {
-        padding: 12px 24px;
-        background: transparent;
-        color: #0f0;
-        border: 2px solid #0f0;
-        font-family: monospace;
-        font-size: 18px;
-        text-decoration: none;
-        text-transform: uppercase;
-        cursor: pointer;
-        display: inline-block;
-    }
-    .btn-wrapper a:hover {
-        background: #0f0;
-        color: #000;
-    }
-&lt;/style&gt;
+.progress-bar {
+  height: 100%;
+  width: 0%; /* Начинаем с 0 */
+  background: #0f0;
+  box-shadow: 0 0 8px rgba(15, 255, 0, 0.7);
+  position: absolute;
+  top: 0;
+  left: 0;
+  /* Убрали animation отсюда, будем менять width через JS макрос */
+  transition: width 1s ease-out; 
+  z-index: 1;
+}
 
-&lt;div class=&quot;boot-screen&quot;&gt;
-    &lt;div class=&quot;boot-log&quot; id=&quot;boot-log&quot;&gt;
-СИСТЕМА: инициализация...
-СИСТЕМА: загрузка модулей ядра...
-СИСТЕМА: проверка памяти...
-    &lt;/div&gt;
+.percent-text {
+  font-weight: bold;
+  font-size: 1rem;
+  color: #0f0;
+  text-shadow: 0 0 6px rgba(15, 255, 0, 0.6);
+  position: relative;
+  z-index: 2;
+  /* Убрали ::after и content анимацию, чтобы не было задвоения */
+}
 
-    &lt;div class=&quot;progress-container&quot;&gt;
-        &lt;div class=&quot;progress-bar&quot; id=&quot;progress-bar&quot;&gt;&lt;/div&gt;
-    &lt;/div&gt;
-    &lt;div class=&quot;progress-text&quot; id=&quot;progress-text&quot;&gt;СТАТУС: ОЖИДАНИЕ&lt;/div&gt;
+.continue-btn {
+  position: absolute;
+  bottom: 60px;
+  left: 50%;
+  transform: translateX(-50%) scale(0);
+  padding: 14px 32px;
+  background: #0f0;
+  color: #000;
+  border: 3px solid #0a0;
+  font-family: 'Courier New', Courier, monospace;
+  font-weight: bold;
+  font-size: 1.1rem;
+  text-decoration: none;
+  box-shadow: 0 0 12px rgba(15, 255, 0, 0.8);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s;
+  opacity: 0; /* Скрыта по умолчанию */
+  cursor: pointer;
+  z-index: 30;
+  pointer-events: none; /* Блокируем клики пока не появится */
+}
 
-    &lt;div id=&quot;continue-wrapper&quot; class=&quot;btn-wrapper&quot;&gt;
-        [[Продолжить|OSInterface]]
-    &lt;/div&gt;
-&lt;/div&gt;
+.continue-btn:hover {
+  box-shadow: 0 0 18px rgba(15, 255, 0, 1);
+  transform: translateX(-50%) scale(1.05);
+}
 
+/* Класс для появления кнопки */
+.continue-btn.visible {
+  opacity: 1;
+  transform: translateX(-50%) scale(1);
+  pointer-events: auto;
+}
+/* Контейнер для текста в стиле ЭЛТ */
+.crt-text-area {
+  position: relative;
+  max-width: 600px;
+  margin: 40px auto;
+  padding: 20px;
+  background: #000;
+  color: #0f0;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 1.1rem;
+  line-height: 1.5;
+  border-top: 10px solid #444;
+  border-left: 5px solid #333;
+  border-right: 5px solid #333;
+  border-bottom: 20px solid #333;
+  box-shadow: 0 0 20px rgba(0,0,0,0.8);
+  overflow: hidden;
+}
+
+/* Эффект мерцания/сканерных линий поверх текста */
+.crt-text-area::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    to bottom, 
+    rgba(255,255,255,0.05) 50%, 
+    rgba(0,0,0,0.1) 50%
+  );
+  background-size: 100% 4px;
+  pointer-events: none;
+  z-index: 10;
+  opacity: 0.7;
+}
+
+/* Убираем лишние отступы у параграфа Harlowe, чтобы ЭЛТ-рамка была видна */
+.passage {
+  padding: 0 !important;
+  max-width: 100% !important;
+}
+
+</style><script role="script" id="twine-user-script" type="text/twine-javascript"></script><tw-passagedata pid="1" name="Main" tags="" position="600,100" size="100,100">&lt;!-- Макрос для запуска анимации и логики --&gt;
 &lt;script&gt;
 (function() {
-    console.log(&#39;Загрузка скрипта заставки...&#39;);
+  // Ждем загрузки DOM
+  if (document.readyState === &#39;loading&#39;) {
+    document.addEventListener(&#39;DOMContentLoaded&#39;, runLogic);
+  } else {
+    runLogic();
+  }
 
-    function init() {
-        const log = document.getElementById(&#39;boot-log&#39;);
-        const bar = document.getElementById(&#39;progress-bar&#39;);
-        const text = document.getElementById(&#39;progress-text&#39;);
-        const wrapper = document.getElementById(&#39;continue-wrapper&#39;);
+  function runLogic() {
+    const statusText = document.getElementById(&#39;statusText&#39;);
+    const percentText = document.getElementById(&#39;percentText&#39;);
+    const progressBar = document.getElementById(&#39;progBar&#39;);
+    const btn = document.getElementById(&#39;continueBtn&#39;);
 
-        if (!log || !bar || !text || !wrapper) {
-            console.error(&#39;КРИТИЧЕСКАЯ ОШИБКА: Не найдены элементы интерфейса. Проверь ID в HTML.&#39;);
-            return;
-        }
+    if (!statusText || !btn) return; // Защита от ошибки null
 
-        console.log(&#39;Элементы найдены. Начинаем анимацию...&#39;);
-
-        // 1. Анимация печатной машинки
-        const lines = log.innerText.split(&#39;\n&#39;);
-        log.innerText = &#39;&#39;;
-        let i = 0;
-
-        const typeInterval = setInterval(() =&gt; {
-            if (i &lt; lines.length) {
-                log.innerText += lines[i] + &#39;\n&#39;;
-                i++;
-            } else {
-                clearInterval(typeInterval);
-                console.log(&#39;Текст напечатан. Запуск прогресс-бара...&#39;);
-                startProgress();
-            }
-        }, 150);
-
-        // 2. Анимация прогресс-бара (Упрощенная и надежная)
-        function startProgress() {
-            let current = 0;
-            const stages = [
-                { t: 20, msg: &quot;СТАТУС: ПРОВЕРКА ДИСКОВ&quot; },
-                { t: 50, msg: &quot;СТАТУС: ЗАГРУЗКА РЕСУРСОВ&quot; },
-                { t: 80, msg: &quot;СТАТУС: ПОДГОТОВКА ИНТЕРФЕЙСА&quot; },
-                { t: 100, msg: &quot;СТАТУС: СИСТЕМА ПОДКЛЮЧЕНА&quot; }
-            ];
-            let stageIdx = 0;
-
-            function update() {
-                // Обновляем текст статуса при достижении порога
-                if (stageIdx &lt; stages.length &amp;&amp; current &gt;= stages[stageIdx].t) {
-                    text.innerText = stages[stageIdx].msg;
-                    console.log(&#39;Статус обновлен:&#39;, stages[stageIdx].msg);
-                    stageIdx++;
-                }
-
-                // Двигаем полоску
-                bar.style.width = current + &#39;%&#39;;
-
-                if (current &gt;= 100) {
-                    text.innerText = &quot;СТАТУС: СИСТЕМА ПОДКЛЮЧЕНА&quot;;
-                    wrapper.classList.add(&#39;ready&#39;);
-                    console.log(&#39;Загрузка завершена. Кнопка активна.&#39;);
-                    return;
-                }
-
-                // Шаг заполнения (случайный рывок для эффекта &quot;глюка&quot;)
-                const step = Math.random() &gt; 0.8 ? 0 : (1 + Math.random() * 2);
-                current += step;
-                if (current &gt; 100) current = 100;
-
-                // Рекурсивный вызов
-                setTimeout(update, 40);
-            }
-            update();
-        }
-    }
-
-    // Защита от раннего запуска
-    if (document.readyState === &#39;loading&#39;) {
-        document.addEventListener(&#39;DOMContentLoaded&#39;, init);
-    } else {
-        init();
-    }
+    // Имитация загрузки (цикл)
+    let current = 0;
+    const interval = setInterval(() =&gt; {
+      if (current &lt; 100) {
+        current += Math.random() * 5 + 2; // Случайный шаг
+        if (current &gt; 100) current = 100;
+        
+        progressBar.style.width = current + &#39;%&#39;;
+        percentText.textContent = Math.floor(current) + &#39;%&#39;;
+      } else {
+        clearInterval(interval);
+        // Финальные действия
+        statusText.textContent = &#39;Данные загружены&#39;;
+        btn.classList.add(&#39;visible&#39;); // Показываем кнопку
+      }
+    }, 150);
+  }
 })();
 &lt;/script&gt;
-</tw-passagedata><tw-passagedata pid="2" name="OSInterface" tags="" position="625,250" size="100,100"></tw-passagedata></tw-storydata>
+
+&lt;div class=&quot;fallout-container&quot;&gt;
+  &lt;div class=&quot;crt-frame&quot;&gt;
+    &lt;div class=&quot;crt-screen&quot;&gt;
+      &lt;div class=&quot;scanlines&quot;&gt;&lt;/div&gt;
+      &lt;div class=&quot;glow&quot;&gt;&lt;/div&gt;
+
+      &lt;div class=&quot;status-panel&quot;&gt;
+        &lt;!-- Текст будет заменен макросом Harlowe --&gt;
+        &lt;p class=&quot;status-text&quot; id=&quot;statusText&quot;&gt;Загрузка данных...&lt;/p&gt;
+        
+        &lt;div class=&quot;progress-wrapper&quot;&gt;
+          &lt;div class=&quot;progress-bar&quot; id=&quot;progBar&quot;&gt;&lt;/div&gt;
+        &lt;/div&gt;
+        
+        &lt;!-- Убрали сложную анимацию процентов, оставили статичный блок для цифры --&gt;
+        &lt;p class=&quot;percent-text&quot; id=&quot;percentText&quot;&gt;0%&lt;/p&gt;
+      &lt;/div&gt;
+
+      &lt;!-- Кнопка теперь просто ссылка Harlowe --&gt;
+      &lt;a href=&quot;[[OSInterface]]&quot; class=&quot;continue-btn&quot; id=&quot;continueBtn&quot;&gt;Продолжить&lt;/a&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+</tw-passagedata><tw-passagedata pid="2" name="OSInterface" tags="" position="600,225" size="100,100">{
+  (set: \$charIndex to 0)
+  (set: \$text to &quot;Ваш текст для эффекта печатной машинки здесь. Он будет появляться буква за буквой.&quot;)
+  (set: \$speed to 50) /* Скорость в мс (меньше = быстрее) */
+}
+
+&lt;div id=&quot;typewriter-output&quot; style=&quot;color: #0f0; text-shadow: 0 0 5px rgba(15,255,0,0.8); font-family: &#39;Courier New&#39;, monospace; font-size: 1.2rem; margin-top: 50px; white-space: pre-wrap;&quot;&gt;&lt;/div&gt;
+
+(live: \$speed)[
+  (if: $charIndex &lt; $text.length)[
+    (set: \$charIndex to it + 1)
+    (replace: #typewriter-output)[(substring: $text, 0, $charIndex)]
+  ]
+  (else:)[
+    (stop:)
+    /* Здесь можно добавить кнопку продолжения для этого параграфа */
+    &lt;br&gt;&lt;br&gt;
+    &lt;a href=&quot;[[Далее]]&quot; class=&quot;continue-btn&quot; style=&quot;color: #0f0; border: 1px solid #0f0; padding: 10px; text-decoration: none;&quot;&gt;Читать дальше&lt;/a&gt;
+  ]
+]
+</tw-passagedata><tw-passagedata pid="3" name="Далее" tags="" position="600,350" size="100,100"></tw-passagedata></tw-storydata>
 <script title="Twine engine code" data-main="harlowe">(function(){"use strict";
 var require,define;!function(){var e={},r={};require=function(i){var n=e[i];return n&&(r[i]=n[1].apply(void 0,n[0].map(require)),e[i]=void 0),r[i]},(define=function(r,i,n){if("function"==typeof r)return r();e[r]=[i,n]}).amd=!0}();/*!
  * https://github.com/paulmillr/es6-shim
